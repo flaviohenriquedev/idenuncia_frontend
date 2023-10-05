@@ -1,23 +1,60 @@
 'use client'
 
-
 import * as S from './style'
 import {PageContent} from '@/components/layout/root/content';
-import {FormEvent, useState} from "react";
+import {FormEvent, useDebugValue, useState} from "react";
 import {Button} from "@/components/actions/button";
 import {Alert} from "@/components/data_display/alert";
 
+type EmailContact = {
+    name: string
+    phone: string
+    email: string
+    companyName: string
+    position: string
+    message: string
+}
+
 export default function PageContact() {
 
+    const [emailContactDTO, setEmailContactDTO] = useState<EmailContact>({
+        name: '',
+        phone: '',
+        email: '',
+        companyName: '',
+        position: '',
+        message: ''
+    })
     const [terms, setTerms] = useState(false)
     const [showAlert, setShowAlert] = useState(false)
-    const [alertMessage, setAlertMessage] = useState("")
-
+    const [alertMessage, setAlertMessage] = useState<string>("")
+    const [typeAlert, setTypeAlert] = useState<'success' | 'warning' | 'error'>()
 
     function handleSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault()
-        setAlertMessage("Envio realizado com sucesso. Obrigado por nos escolher, em breve retornaremos o contato.")
-        setShowAlert(true)
+
+        sendEmail();
+    }
+
+    async function sendEmail() {
+        await fetch("http://localhost:9090/send_email/contact", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(emailContactDTO),
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    setTypeAlert('success')
+                }
+                return response.text();
+            })
+            .then(data => {
+                setAlertMessage(data)
+                setShowAlert(true)
+            }) // Exibe a resposta no console
+            .catch(error => console.error("Erro:", error));
     }
 
     function closeAlert() {
@@ -54,6 +91,8 @@ export default function PageContact() {
                                 <input
                                     type="text"
                                     placeholder="Digite seu nome completo."
+                                    value={emailContactDTO?.name}
+                                    onChange={(e) => setEmailContactDTO({...emailContactDTO, name: e.target.value})}
                                     className="input input-bordered input-sm w-full grow"
                                 />
                             </div>
@@ -65,6 +104,8 @@ export default function PageContact() {
                                 <input
                                     type="phone"
                                     placeholder="(00) 99999-9999"
+                                    value={emailContactDTO?.phone}
+                                    onChange={(e) => setEmailContactDTO({...emailContactDTO, phone: e.target.value})}
                                     className="input input-bordered input-sm w-full grow"
                                 />
                             </div>
@@ -76,6 +117,8 @@ export default function PageContact() {
                                 <input
                                     type="email"
                                     placeholder="Informe seu melhor email."
+                                    value={emailContactDTO?.email}
+                                    onChange={(e) => setEmailContactDTO({...emailContactDTO, email: e.target.value})}
                                     className="input input-bordered input-sm w-full grow"
                                 />
                             </div>
@@ -89,6 +132,8 @@ export default function PageContact() {
                                 <input
                                     type="text"
                                     placeholder="Nome da sua empresa."
+                                    value={emailContactDTO?.companyName}
+                                    onChange={(e) => setEmailContactDTO({...emailContactDTO, companyName: e.target.value})}
                                     className="input input-bordered input-sm w-full grow"
                                 />
                             </div>
@@ -100,6 +145,8 @@ export default function PageContact() {
                                 <input
                                     type="phone"
                                     placeholder="Qual seu cargo?"
+                                    value={emailContactDTO?.position}
+                                    onChange={(e) => setEmailContactDTO({...emailContactDTO, position: e.target.value})}
                                     className="input input-bordered input-sm w-full grow"
                                 />
                             </div>
@@ -111,13 +158,13 @@ export default function PageContact() {
                                 </label>
                                 <textarea
                                     placeholder="Mensagem"
+                                    value={emailContactDTO?.message}
+                                    onChange={(e) => setEmailContactDTO({...emailContactDTO, message: e.target.value})}
                                     className="textarea textarea-bordered textarea-lg grow resize-none h-60"
                                 ></textarea>
                             </div>
                         </fieldset>
                         <div className="flex items-center justify-between">
-
-
                             <div className="flex gap-10 ">
                                 <label className="flex items-center gap-4">
                                     <span className="label-text">Concordo com os termos</span>
